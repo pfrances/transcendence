@@ -4,32 +4,35 @@ services:
     container_name: dev_database
     image: postgres:latest
     environment:
-      POSTGRES_DB: ${DEV_DB_NAME}
-      POSTGRES_USER: ${DEV_DB_USER}
-      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     networks:
-    - back-db_network
+      - back-db_network
   back-end:
     build:
       context: ./back-end
+      dockerfile: Dockerfile  # back-endディレクトリ内のDockerfileを指定
     depends_on:
       - dev-db
     ports:
       - "3333:3333"
     environment:
-      DATABASE_URL: postgres://${DEV_DB_USER}:${DEV_DB_PASSWORD}@dev-db:5432/${DEV_DB_NAME}?schema=public
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@dev-db:5432/${DB_NAME}?schema=public
     networks:
-    - front-back_network
-    - back-db_network
+      - front-back_network
+      - back-db_network
   front-end:
     build:
       context: ./front-end
+      dockerfile: Dockerfile  # front-endディレクトリ内のDockerfileを指定
     ports:
       - "3000:3000"
     depends_on:
       - back-end
     networks:
-    - front-back_network
+      - front-back_network
 networks:
   front-back_network:
   back-db_network:
+
