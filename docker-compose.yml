@@ -1,31 +1,41 @@
 version: '3.8'
 services:
   dev-db:
-    container_name: dev_database
+    container_name: ${DB_CONTAINER_NAME}
     image: postgres:latest
     environment:
-      POSTGRES_DB: ${DEV_DB_NAME}
-      POSTGRES_USER: ${DEV_DB_USER}
-      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:5432
     networks:
     - back-db_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
   back-end:
+    container_name: ${BACK_END_CONTAINER_NAME}
+    env_file:
+      - .env
+      - back-end/.env
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_CONTAINER_NAME}:${DB_PORT}/${DB_NAME}?schema=public
     build:
       context: ./back-end
     depends_on:
       - dev-db
     ports:
-      - "3333:3333"
-    environment:
-      DATABASE_URL: postgres://${DEV_DB_USER}:${DEV_DB_PASSWORD}@dev-db:5432/${DEV_DB_NAME}?schema=public
+      - ${BACK_END_PORT}:3333
+      - ${PRISMA_MONITOR_PORT}:5555
     networks:
     - front-back_network
     - back-db_network
   front-end:
+    container_name: ${FRONT_END_CONTAINER_NAME}
     build:
       context: ./front-end
     ports:
-      - "3000:3000"
+      - ${FRONT_END_PORT}:3000
     depends_on:
       - back-end
     networks:
@@ -33,3 +43,7 @@ services:
 networks:
   front-back_network:
   back-db_network:
+volumes:
+  postgres_data:
+    external: ${DB_IS_EXTERNAL}
+    name: ${DB_VOLUME_NAME}
